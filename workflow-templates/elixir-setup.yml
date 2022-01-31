@@ -1,0 +1,23 @@
+name: Elixir Setup
+
+jobs:
+  set-up:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: simonmeulenbeek/gh-action-elixir-setup
+        with:
+          project-dir: 'api'
+      - name: Build Docker image
+        run: docker-compose build api
+      - name: Install Elixir packages and compile
+        run: docker-compose run --rm api mix do deps.get, deps.compile --warnings-as-errors
+      - name: Unit tests
+        run: docker-compose run --rm api mix coveralls
+      - name: Formatting
+        run: docker-compose run --rm api mix format --check-formatted
+      - name: Credo
+        run: docker-compose run --rm api mix credo --strict
+      - name: Security
+        run: docker-compose run --rm api mix sobelow -i Config.HTTPS --skip
+      - name: Audit
+        run: docker-compose run --rm api mix deps.audit
